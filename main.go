@@ -44,6 +44,7 @@ func main() {
 					log.Printf("Error setting IP: %v\n", err)
 				} else {
 					log.Println("Updated!")
+					previousIP = ip
 				}
 			}
 		}
