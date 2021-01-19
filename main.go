@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -23,13 +24,28 @@ var (
 	}
 
 	previousIP string
+
+	recType string
 )
 
 func main() {
-	log.Printf("Getting the ID of the record %s\n", Zone)
+	log.Printf("Getting initial ip\n")
+	ip, err := getIP()
+	if err != nil {
+		log.Printf("Failed to get IP: %v\n", err)
+		os.Exit(-1)
+	}
+	log.Printf("Determining IP type\n")
+	parsedIP := net.ParseIP(ip)
+	if parsedIP.To4() != nil {
+		recType = "A"
+	} else {
+		recType = "AAAA"
+	}
+	log.Printf("Getting the ID of the record (%s)\n", Zone)
 	recID, err := getRecordID()
 	if err != nil {
-		log.Printf("Failed to get the ID of the record %v\n", err)
+		log.Printf("Failed to get the ID of the record %v (%s)\n", err, recType)
 		os.Exit(-1)
 	}
 	log.Printf("Got record ID: %s\n", recID)
@@ -95,7 +111,7 @@ func newClient() *http.Client {
 // getRecordID gets the record ID of a DNS record based on the record name
 func getRecordID() (string, error) {
 	client := newClient()
-	url := "https://api.cloudflare.com/client/v4/zones/" + Zone + "/dns_records?type=A&name=" + RecordName
+	url := "https://api.cloudflare.com/client/v4/zones/" + Zone + "/dns_records?type=" + recType + "&name=" + RecordName
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return "", fmt.Errorf("cannot create request: %v", err)
@@ -121,7 +137,7 @@ func getRecordID() (string, error) {
 // setIP sets the IP address based on record ID.
 func setIP(ip string, recID string) error {
 	client := newClient()
-	body := `{"type":"A","name":"` + RecordName + `","content":"` + ip + `","ttl":120,"proxied":false}`
+	body := `{"type":"` + recType + `","name":"` + RecordName + `","content":"` + ip + `","ttl":120,"proxied":false}`
 	url := "https://api.cloudflare.com/client/v4/zones/" + Zone + "/dns_records/" + recID
 	req, err := http.NewRequest("PUT", url, strings.NewReader(body))
 	if err != nil {
