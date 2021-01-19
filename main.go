@@ -26,9 +26,10 @@ var (
 )
 
 func main() {
-	log.Printf("Getting the ID of the record (%s)\n", Zone)
+	log.Printf("Getting the ID of the record %s\n", Zone)
 	recID, err := getRecordID()
 	if err != nil {
+		log.Printf("Failed to get the ID of the record %v\n", err)
 		os.Exit(-1)
 	}
 	log.Printf("Got record ID: %s\n", recID)
