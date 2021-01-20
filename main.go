@@ -29,7 +29,7 @@ var (
 )
 
 func main() {
-	log.Printf("Getting initial ip\n")
+	log.Printf("Getting initial IP address\n")
 	ip, err := getIP()
 	if err != nil {
 		log.Printf("Failed to get IP: %v\n", err)
